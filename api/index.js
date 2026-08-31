@@ -115,6 +115,15 @@ async function getStandings() {
 }
 
 module.exports = async (req, res) => {
+if (req.method === "GET" && req.query.setup === "webhook") {
+  const webhookUrl = "https://saudi-goal-bot.vercel.app/api";
+
+  const result = await getJSON(
+    `https://api.telegram.org/bot${TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`
+  );
+
+  return res.status(200).json(result);
+}  
   if (req.method !== "POST") {
     return res.status(200).json({
       ok: true,
