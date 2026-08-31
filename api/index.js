@@ -3,6 +3,7 @@ const https = require("https");
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const LEAGUE = "ksa.1";
 
+
 function getJSON(url) {
   return new Promise((resolve, reject) => {
     https.get(url, (res) => {
