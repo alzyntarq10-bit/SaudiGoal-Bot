@@ -6,21 +6,38 @@ const LEAGUE = "ksa.1";
 
 function getJSON(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
-      let data = "";
-
-      res.on("data", (chunk) => {
-        data += chunk;
-      });
-
-      res.on("end", () => {
-        try {
-          resolve(JSON.parse(data));
-        } catch (e) {
-          reject(e);
+    https.get(
+      url,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          "Accept": "application/json"
         }
-      });
-    }).on("error", reject);
+      },
+      (res) => {
+        let data = "";
+
+        res.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        res.on("end", () => {
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            return reject(
+              new Error(`HTTP ${res.statusCode}: ${data.slice(0, 200)}`)
+            );
+          }
+
+          try {
+            resolve(JSON.parse(data));
+          } catch (e) {
+            reject(
+              new Error(`Invalid JSON response: ${data.slice(0, 200)}`)
+            );
+          }
+        });
+      }
+    ).on("error", reject);
   });
 }
 
