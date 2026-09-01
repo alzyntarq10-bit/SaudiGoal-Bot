@@ -108,24 +108,22 @@ async function getMatches() {
 
 async function getStandings() {
   const url =
-    `https://site.api.espn.com/apis/v2/sports/soccer/${LEAGUE}/standings`;
+    "https://www.thesportsdb.com/api/v1/json/123/lookuptable.php?l=4668&s=2026-2027";
 
   const data = await getJSON(url);
-  const entries = data.children?.[0]?.standings?.entries;
+  const table = data.table || [];
 
-  if (!entries || entries.length === 0) {
+  if (table.length === 0) {
     return "🏆 تعذر جلب ترتيب الدوري السعودي الآن.";
   }
 
   let message = "🏆 ترتيب الدوري السعودي\n\n";
 
-  entries.slice(0, 18).forEach((entry, index) => {
-    const team = entry.team?.displayName || "غير معروف";
-    const stats = entry.stats || [];
-    const points =
-      stats.find((s) => s.name === "points")?.displayValue || "-";
+  table.slice(0, 18).forEach((team, index) => {
+    const name = team.strTeam || "غير معروف";
+    const points = team.intPoints ?? "-";
 
-    message += `${index + 1}. ${team} - ${points} نقطة\n`;
+    message += `${index + 1}. ${name} - ${points} نقطة\n`;
   });
 
   return message;
