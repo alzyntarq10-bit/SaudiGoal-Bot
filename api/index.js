@@ -108,7 +108,7 @@ async function getMatches() {
 
 async function getStandings() {
   const url =
-    "https://www.thesportsdb.com/api/v1/json/123/lookuptable.php?l=4668&s=2026-2027";
+  "https://www.thesportsdb.com/api/v1/json/123/lookuptable.php?l=4668&s=2025-2026";
 
   const data = await getJSON(url);
   const table = data.table || [];
