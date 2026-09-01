@@ -194,11 +194,13 @@ async function getStandings() {
   });
 
   let message = "🏆 ترتيب الدوري السعودي\n\n";
+message += "لعب | فوز | تعادل | خسارة | فارق | نقاط\n\n";
 
-  standings.forEach((team, index) => {
-    message += `${index + 1}. ${team.name} - ${team.points} نقطة\n`;
-  });
-
+standings.forEach((team, index) => {
+  message += `${index + 1}. ${team.name}\n`;
+  message += `لعب ${team.played} | فوز ${team.won} | تعادل ${team.drawn} | خسارة ${team.lost}\n`;
+  message += `فارق ${team.gd} | نقاط ${team.points}\n\n`;
+});
   return message;
 }
 module.exports = async (req, res) => {
