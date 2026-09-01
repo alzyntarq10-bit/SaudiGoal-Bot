@@ -70,37 +70,37 @@ function sendMessage(chatId, text) {
 }
 
 async function getMatches() {
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Riyadh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(new Date());
+
   const url =
-    `https://site.api.espn.com/apis/site/v2/sports/soccer/${LEAGUE}/scoreboard`;
+    `https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d=${today}&s=Soccer`;
 
   const data = await getJSON(url);
 
-  if (!data.events || data.events.length === 0) {
-    return "⚽ لا توجد مباريات ظاهرة حاليًا في الدوري السعودي.";
+  const matches = (data.events || []).filter(
+    (event) => event.idLeague === "4668"
+  );
+
+  if (matches.length === 0) {
+    return "⚽ لا توجد مباريات اليوم في الدوري السعودي للمحترفين.";
   }
 
-  let message = "⚽ مباريات الدوري السعودي\n\n";
+  let message = "⚽ مباريات الدوري السعودي اليوم\n\n";
 
-  data.events.slice(0, 10).forEach((event) => {
-    const comp = event.competitions?.[0];
-    if (!comp) return;
+  matches.forEach((event) => {
+    const home = event.strHomeTeam || "غير معروف";
+    const away = event.strAwayTeam || "غير معروف";
+    const time = event.strTime
+      ? event.strTime.substring(0, 5)
+      : "الوقت غير محدد";
 
-    const teams = comp.competitors || [];
-    const home = teams.find((t) => t.homeAway === "home");
-    const away = teams.find((t) => t.homeAway === "away");
-
-    const homeName = home?.team?.displayName || "غير معروف";
-    const awayName = away?.team?.displayName || "غير معروف";
-    const homeScore = home?.score ?? "-";
-    const awayScore = away?.score ?? "-";
-
-    const status =
-      comp.status?.type?.shortDetail ||
-      event.status?.type?.shortDetail ||
-      "";
-
-    message += `${homeName} ${homeScore} - ${awayScore} ${awayName}\n`;
-    message += `${status}\n\n`;
+    message += `🏟️ ${home} × ${away}\n`;
+    message += `🕒 ${time}\n\n`;
   });
 
   return message;
