@@ -108,27 +108,99 @@ async function getMatches() {
 
 async function getStandings() {
   const url =
-  "https://www.thesportsdb.com/api/v1/json/123/lookuptable.php?l=4668&s=2025-2026";
+    "https://www.thesportsdb.com/api/v1/json/123/eventsseason.php?id=4668&s=2026-2027";
 
   const data = await getJSON(url);
-  const table = data.table || [];
+  const events = data.events || [];
 
-  if (table.length === 0) {
+  if (events.length === 0) {
     return "🏆 تعذر جلب ترتيب الدوري السعودي الآن.";
   }
 
+  const teams = {};
+
+  function addTeam(name) {
+    if (!name) return;
+
+    if (!teams[name]) {
+      teams[name] = {
+        name,
+        played: 0,
+        won: 0,
+        drawn: 0,
+        lost: 0,
+        gf: 0,
+        ga: 0,
+        gd: 0,
+        points: 0
+      };
+    }
+  }
+
+  events.forEach((event) => {
+    const home = event.strHomeTeam;
+    const away = event.strAwayTeam;
+
+    addTeam(home);
+    addTeam(away);
+
+    const homeScore = Number(event.intHomeScore);
+    const awayScore = Number(event.intAwayScore);
+
+    if (
+      event.intHomeScore === null ||
+      event.intAwayScore === null ||
+      Number.isNaN(homeScore) ||
+      Number.isNaN(awayScore)
+    ) {
+      return;
+    }
+
+    teams[home].played++;
+    teams[away].played++;
+
+    teams[home].gf += homeScore;
+    teams[home].ga += awayScore;
+
+    teams[away].gf += awayScore;
+    teams[away].ga += homeScore;
+
+    if (homeScore > awayScore) {
+      teams[home].won++;
+      teams[home].points += 3;
+      teams[away].lost++;
+    } else if (awayScore > homeScore) {
+      teams[away].won++;
+      teams[away].points += 3;
+      teams[home].lost++;
+    } else {
+      teams[home].drawn++;
+      teams[away].drawn++;
+      teams[home].points++;
+      teams[away].points++;
+    }
+  });
+
+  const standings = Object.values(teams);
+
+  standings.forEach((team) => {
+    team.gd = team.gf - team.ga;
+  });
+
+  standings.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.gd !== a.gd) return b.gd - a.gd;
+    return b.gf - a.gf;
+  });
+
   let message = "🏆 ترتيب الدوري السعودي\n\n";
 
-  table.slice(0, 18).forEach((team, index) => {
-    const name = team.strTeam || "غير معروف";
-    const points = team.intPoints ?? "-";
-
-    message += `${index + 1}. ${name} - ${points} نقطة\n`;
+  standings.forEach((team, index) => {
+    message += `${index + 1}. ${team.name} - ${team.points} نقطة\n`;
   });
 
   return message;
 }
-
 module.exports = async (req, res) => {
 if (req.method === "GET" && req.query.setup === "webhook") {
   const webhookUrl = "https://saudi-goal-bot.vercel.app/api";
